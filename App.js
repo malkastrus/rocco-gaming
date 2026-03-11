@@ -1,0 +1,440 @@
+import { useState } from "react";
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
+
+const WA = "584246689203";
+
+const IP = [
+  {id:1,name:"Control PS5 DualSense",desc:"Control inalámbrico original Sony PS5, gatillos adaptativos",priceUSD:45,cost:28,stock:3,status:'available',cat:'Consolas',em:'🎮',waitlist:[]},
+  {id:2,name:"Audífonos Gaming RGB",desc:"Surround 7.1 virtual, micrófono desmontable, iluminación RGB",priceUSD:25,cost:12,stock:0,status:'agotado',cat:'Accesorios',em:'🎧',waitlist:[]},
+  {id:3,name:"Mousepad XL Gamer",desc:"900×400mm superficie textil premium, base antideslizante",priceUSD:12,cost:5,stock:5,status:'available',cat:'PC Gaming',em:'🖱️',waitlist:[]},
+  {id:4,name:"Figura Goku Ultra Instinct",desc:"Figura coleccionable 20cm PVC alta calidad",priceUSD:18,cost:8,stock:2,status:'available',cat:'Coleccionables',em:'⚡',waitlist:[]},
+  {id:5,name:"Teclado Mecánico TKL",desc:"Switch Blue, retroiluminación RGB, compacto sin numpad",priceUSD:38,cost:20,stock:1,status:'available',cat:'PC Gaming',em:'⌨️',waitlist:[]},
+];
+
+const IO = [
+  {id:1,client:"Carlos M.",phone:"+58412345678",email:"carlos@gmail.com",products:["Control PS5 DualSense"],total:45,payment:"Binance",status:'completado',date:'2025-03-01',tasa:38.5},
+  {id:2,client:"María G.",phone:"+58424987654",email:"",products:["Mousepad XL Gamer"],total:12,payment:"Pago Móvil",status:'pendiente',date:'2025-03-08',tasa:38.5},
+  {id:3,client:"Luis P.",phone:"+58416555444",email:"",products:["Figura Goku Ultra Instinct"],total:18,payment:"Efectivo",status:'completado',date:'2025-03-10',tasa:38.5},
+];
+
+const IE = [
+  {id:1,desc:"Compra AliExpress - Audífonos x5",amount:60,currency:'USD',type:'compra',date:'2025-03-01'},
+  {id:2,desc:"Envío DHL internacional",amount:15,currency:'USD',type:'envio',date:'2025-03-03'},
+  {id:3,desc:"Publicidad Instagram",amount:10,currency:'USD',type:'marketing',date:'2025-03-05'},
+];
+
+const IC = [
+  {id:1,name:"Carlos M.",phone:"+58412345678",email:"carlos@gmail.com",purchases:2,total:63,lastBuy:'2025-03-01'},
+  {id:2,name:"María G.",phone:"+58424987654",email:"",purchases:1,total:12,lastBuy:'2025-03-08'},
+  {id:3,name:"Luis P.",phone:"+58416555444",email:"",purchases:1,total:18,lastBuy:'2025-03-10'},
+];
+
+const IS = {
+  tasaBCV:38.5, tasaParalelo:40.2, tasaCLP:950,
+  binanceUser:'RoccoGaming', pagoMovil:'04246687613', cedula:'26618867', banco:'Banesco',
+  deliveryZones:[{name:'Zona 1 - Local',price:2},{name:'Zona 2 - Caracas',price:5},{name:'Zona 3 - Interior',price:8}]
+};
+
+const GS = () => <style>{`
+  @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Exo+2:wght@300;400;500;600;700&display=swap');
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Exo 2',sans-serif;background:#060610;color:#e2e8f0}
+  ::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:#0d0d20}::-webkit-scrollbar-thumb{background:#00e5ff33;border-radius:2px}
+  input,select,textarea{background:#060610;border:1px solid #1e1e40;color:#e2e8f0;font-family:'Exo 2',sans-serif;outline:none;transition:border-color .2s;width:100%}
+  input:focus,select:focus{border-color:#00e5ff55}
+  .btn-p{background:linear-gradient(135deg,#00e5ff,#0099cc);color:#000;font-weight:700;font-family:'Exo 2',sans-serif;border:none;cursor:pointer;transition:all .2s}
+  .btn-p:hover{transform:translateY(-1px);box-shadow:0 8px 25px #00e5ff33}
+  .btn-s{background:transparent;border:1px solid #00e5ff44;color:#00e5ff;font-family:'Exo 2',sans-serif;cursor:pointer;transition:all .2s}
+  .btn-s:hover{background:#00e5ff11}
+  .panel{background:#0d0d20;border:1px solid #1e1e40;border-radius:12px}
+  .tag{display:inline-block;padding:2px 10px;border-radius:20px;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase}
+  .tag-ok{background:#22c55e18;color:#22c55e;border:1px solid #22c55e44}
+  .tag-no{background:#ef444418;color:#ef4444;border:1px solid #ef444444}
+  .tag-wr{background:#f59e0b18;color:#f59e0b;border:1px solid #f59e0b44}
+  .fade{animation:fi .3s ease}
+  @keyframes fi{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+  .card-hover{transition:transform .2s}.card-hover:hover{transform:translateY(-4px)}
+`}/>;
+
+const Notif = ({msg,type}) => {
+  const c={success:'#22c55e',error:'#ef4444',info:'#00e5ff'};
+  return <div style={{position:'fixed',top:20,right:20,zIndex:9999,background:'#0d0d20',border:`1px solid ${c[type]}44`,borderLeft:`3px solid ${c[type]}`,padding:'12px 20px',borderRadius:8,color:c[type],fontWeight:600,fontSize:14,maxWidth:320}}>{msg}</div>;
+};
+
+const PH = ({title,sub}) => (
+  <div style={{marginBottom:22}}>
+    <h2 style={{fontFamily:'Orbitron,sans-serif',fontSize:20,fontWeight:900,background:'linear-gradient(135deg,#00e5ff,#a855f7)',WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent'}}>{title}</h2>
+    <p style={{color:'#475569',fontSize:12,marginTop:3}}>{sub}</p>
+  </div>
+);
+
+const FF = ({label,value,onChange,type='text',placeholder='',onKeyDown}) => (
+  <div>
+    <label style={{fontSize:11,color:'#475569',textTransform:'uppercase',letterSpacing:1}}>{label}</label>
+    <input type={type} value={value} onChange={e=>onChange(e.target.value)} placeholder={placeholder} onKeyDown={onKeyDown} style={{marginTop:5,padding:'9px 12px',borderRadius:8,fontSize:13}}/>
+  </div>
+);
+
+const Modal = ({title,children,onClose}) => (
+  <div style={{position:'fixed',inset:0,background:'#000000aa',display:'flex',alignItems:'center',justifyContent:'center',zIndex:1000,padding:20}} onClick={e=>e.target===e.currentTarget&&onClose()}>
+    <div style={{background:'#0d0d20',border:'1px solid #1e1e40',borderRadius:14,padding:26,width:'100%',maxWidth:480,maxHeight:'90vh',overflow:'auto'}}>
+      <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:18}}>
+        <h3 style={{fontFamily:'Orbitron,sans-serif',fontSize:14,color:'#00e5ff'}}>{title}</h3>
+        <button onClick={onClose} style={{background:'none',border:'none',color:'#475569',cursor:'pointer',fontSize:18}}>✕</button>
+      </div>
+      {children}
+    </div>
+  </div>
+);
+
+function LoginPage({setView}) {
+  const [u,setU]=useState('');const [p,setP]=useState('');const [err,setErr]=useState('');
+  const login=()=>{if(u==='rocco'&&p==='gaming2025')setView('admin');else{setErr('Credenciales incorrectas');setTimeout(()=>setErr(''),2500);}};
+  return (
+    <div style={{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center',background:'radial-gradient(ellipse at 50% 0%,#0d1a2e 0%,#060610 70%)'}}>
+      <div style={{width:380,padding:'0 20px'}}>
+        <div style={{textAlign:'center',marginBottom:40}}>
+          <div style={{fontSize:56,marginBottom:8,filter:'drop-shadow(0 0 20px #00e5ff44)'}}>🎮</div>
+          <h1 style={{fontFamily:'Orbitron,sans-serif',fontSize:26,fontWeight:900,background:'linear-gradient(135deg,#00e5ff,#a855f7)',WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent',letterSpacing:3}}>ROCCO GAMING</h1>
+          <p style={{color:'#475569',fontSize:11,marginTop:6,letterSpacing:4,textTransform:'uppercase'}}>Panel de Control</p>
+        </div>
+        <div className="panel" style={{padding:32}}>
+          <FF label="Usuario" value={u} onChange={setU} placeholder="rocco"/>
+          <div style={{height:14}}/>
+          <FF label="Contraseña" value={p} onChange={setP} type="password" placeholder="••••••••" onKeyDown={e=>e.key==='Enter'&&login()}/>
+          {err&&<p style={{color:'#ef4444',fontSize:13,margin:'10px 0 0',textAlign:'center'}}>{err}</p>}
+          <button onClick={login} className="btn-p" style={{width:'100%',padding:12,borderRadius:8,fontSize:15,marginTop:20}}>INGRESAR</button>
+          <div style={{borderTop:'1px solid #1e1e40',marginTop:20,paddingTop:16,textAlign:'center'}}>
+            <button onClick={()=>setView('store')} style={{background:'none',border:'none',color:'#00e5ff',cursor:'pointer',fontSize:13}}>🌐 Ver Tienda Pública →</button>
+          </div>
+        </div>
+        <p style={{textAlign:'center',color:'#334155',fontSize:11,marginTop:12}}>usuario: rocco · contraseña: gaming2025</p>
+      </div>
+    </div>
+  );
+}
+
+function StorePage({products,setProducts,settings,setView,notify}) {
+  const [search,setSearch]=useState('');const [cat,setCat]=useState('Todos');const [modal,setModal]=useState(null);const [cp,setCp]=useState(null);
+  const [bForm,setBForm]=useState({name:'',phone:'',email:'',payment:'Binance',tasa:settings.tasaBCV,address:''});
+  const [iForm,setIForm]=useState({name:'',phone:''});
+  const cats=['Todos',...new Set(products.map(p=>p.cat))];
+  const filtered=products.filter(p=>(cat==='Todos'||p.cat===cat)&&p.name.toLowerCase().includes(search.toLowerCase()));
+  const submitBuy=()=>{
+    if(!bForm.name||!bForm.phone)return notify('Completá nombre y teléfono','error');
+    const bs=(cp.priceUSD*bForm.tasa).toFixed(2);const clp=(cp.priceUSD*settings.tasaCLP).toLocaleString();
+    const msg=encodeURIComponent(`🎮 *PEDIDO - ROCCO GAMING*\n\n📦 ${cp.name}\n💵 $${cp.priceUSD} USD\n💸 Bs. ${bs} (Tasa: ${bForm.tasa})\n🇨🇱 $${clp} CLP\n💳 Pago: ${bForm.payment}\n\n👤 ${bForm.name}\n📱 ${bForm.phone}${bForm.address?'\n📍 '+bForm.address:''}\n\n_Esperando confirmación de pago_`);
+    window.open(`https://wa.me/${WA}?text=${msg}`,'_blank');setModal(null);notify('¡Pedido enviado! 🎉');
+  };
+  const submitInterest=()=>{
+    if(!iForm.name||!iForm.phone)return notify('Completá tus datos','error');
+    setProducts(prev=>prev.map(p=>p.id===cp.id?{...p,waitlist:[...p.waitlist,{name:iForm.name,phone:iForm.phone}]}:p));
+    setModal(null);setIForm({name:'',phone:''});notify('¡Te avisaremos! 🔔');
+  };
+  return (
+    <div style={{minHeight:'100vh'}}>
+      <header style={{background:'#0d0d20',borderBottom:'1px solid #1e1e40',padding:'14px 24px',display:'flex',justifyContent:'space-between',alignItems:'center',position:'sticky',top:0,zIndex:100}}>
+        <div style={{display:'flex',alignItems:'center',gap:12}}>
+          <span style={{fontSize:28}}>🎮</span>
+          <div>
+            <h1 style={{fontFamily:'Orbitron,sans-serif',fontSize:16,fontWeight:900,background:'linear-gradient(135deg,#00e5ff,#a855f7)',WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent'}}>ROCCO GAMING</h1>
+            <p style={{fontSize:10,color:'#475569',letterSpacing:2,textTransform:'uppercase'}}>Geek & Gamer Store 🇻🇪</p>
+          </div>
+        </div>
+        <div style={{display:'flex',gap:12,alignItems:'center'}}>
+          <a href={`https://wa.me/${WA}`} target="_blank" rel="noreferrer" style={{color:'#22c55e',textDecoration:'none',fontSize:13}}>💬 WhatsApp</a>
+          <button onClick={()=>setView('admin')} style={{background:'none',border:'1px solid #1e1e40',color:'#475569',padding:'5px 12px',borderRadius:6,cursor:'pointer',fontSize:11}}>⚙️ Admin</button>
+        </div>
+      </header>
+      <div style={{background:'linear-gradient(135deg,#0d1a2e,#0d0d20)',borderBottom:'1px solid #1e1e40',padding:'8px 24px',display:'flex',gap:20,flexWrap:'wrap',justifyContent:'center',fontSize:12}}>
+        <span style={{color:'#475569'}}>💵 <span style={{color:'#e2e8f0'}}>Efectivo</span></span>
+        <span style={{color:'#475569'}}>🔶 Binance: <span style={{color:'#00e5ff',fontWeight:700}}>{settings.binanceUser}</span></span>
+        <span style={{color:'#475569'}}>📱 PM: <span style={{color:'#00e5ff',fontWeight:700}}>{settings.pagoMovil} · V-{settings.cedula}</span></span>
+        <span style={{color:'#475569'}}>💱 BCV: <span style={{color:'#f59e0b',fontWeight:700}}>Bs.{settings.tasaBCV}</span> · CLP: <span style={{color:'#a855f7',fontWeight:700}}>{settings.tasaCLP}</span></span>
+      </div>
+      <div style={{maxWidth:1100,margin:'0 auto',padding:'28px 20px'}}>
+        <div style={{display:'flex',gap:10,marginBottom:28,flexWrap:'wrap'}}>
+          <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="🔍 Buscar producto..." style={{flex:1,minWidth:180,padding:'10px 16px',borderRadius:8,fontSize:14}}/>
+          <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>{cats.map(c=><button key={c} onClick={()=>setCat(c)} style={{padding:'8px 16px',borderRadius:20,border:`1px solid ${cat===c?'#00e5ff':'#1e1e40'}`,background:cat===c?'#00e5ff11':'transparent',color:cat===c?'#00e5ff':'#475569',cursor:'pointer',fontSize:12,transition:'all .2s'}}>{c}</button>)}</div>
+        </div>
+        <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(240px,1fr))',gap:18}}>
+          {filtered.map(product=>{
+            const avail=product.status==='available'&&product.stock>0;
+            const bs=(product.priceUSD*settings.tasaBCV).toFixed(2);
+            const clp=(product.priceUSD*settings.tasaCLP).toLocaleString();
+            return (
+              <div key={product.id} className="panel card-hover" style={{overflow:'hidden',border:`1px solid ${avail?'#00e5ff18':'#1e1e40'}`}}>
+                <div style={{height:140,background:'linear-gradient(135deg,#0a0a1e,#0d1a2e)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:64,position:'relative'}}>
+                  {product.em}
+                  {!avail&&<div style={{position:'absolute',inset:0,background:'#00000077',display:'flex',alignItems:'center',justifyContent:'center'}}><span className="tag tag-no" style={{fontSize:12,padding:'4px 14px'}}>AGOTADO</span></div>}
+                </div>
+                <div style={{padding:16}}>
+                  <div style={{display:'flex',justifyContent:'space-between',marginBottom:7}}><span style={{fontSize:10,color:'#475569',textTransform:'uppercase',letterSpacing:1}}>{product.cat}</span><span className={`tag ${avail?'tag-ok':'tag-no'}`}>{avail?`Stock: ${product.stock}`:'Agotado'}</span></div>
+                  <h3 style={{fontFamily:'Orbitron,sans-serif',fontSize:12,fontWeight:700,marginBottom:5,lineHeight:1.3}}>{product.name}</h3>
+                  <p style={{fontSize:11,color:'#475569',marginBottom:12,lineHeight:1.5}}>{product.desc}</p>
+                  <div style={{background:'#060610',borderRadius:8,padding:'9px 11px',marginBottom:12}}>
+                    <div style={{fontSize:19,fontWeight:700,color:'#00e5ff',fontFamily:'Orbitron,sans-serif'}}>${product.priceUSD} <span style={{fontSize:10,color:'#475569'}}>USD</span></div>
+                    <div style={{fontSize:11,color:'#f59e0b',marginTop:2}}>Bs. {bs}</div>
+                    <div style={{fontSize:10,color:'#a855f7'}}>$ {clp} CLP</div>
+                  </div>
+                  {avail
+                    ? <button onClick={()=>{setCp(product);setModal('buy');}} className="btn-p" style={{width:'100%',padding:'8px',borderRadius:8,fontSize:13}}>🛒 COMPRAR</button>
+                    : <button onClick={()=>{setCp(product);setModal('interest');}} className="btn-s" style={{width:'100%',padding:'8px',borderRadius:8,fontSize:13}}>🔔 ME INTERESA</button>}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+      {modal==='buy'&&cp&&<Modal title={`Comprar: ${cp.name}`} onClose={()=>setModal(null)}>
+        <div style={{display:'flex',flexDirection:'column',gap:12}}>
+          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}}><FF label="Nombre *" value={bForm.name} onChange={v=>setBForm(p=>({...p,name:v}))}/><FF label="Teléfono *" value={bForm.phone} onChange={v=>setBForm(p=>({...p,phone:v}))} placeholder="+584XXXXXXXXX"/></div>
+          <FF label="Dirección" value={bForm.address} onChange={v=>setBForm(p=>({...p,address:v}))}/>
+          <div><label style={{fontSize:11,color:'#475569',textTransform:'uppercase',letterSpacing:1}}>Método de Pago</label><select value={bForm.payment} onChange={e=>setBForm(p=>({...p,payment:e.target.value}))} style={{marginTop:6,padding:'9px 12px',borderRadius:8,fontSize:13}}><option value="Binance">🔶 Binance P2P</option><option value="Pago Móvil">📱 Pago Móvil</option><option value="Efectivo">💵 Efectivo</option></select></div>
+          {(bForm.payment==='Pago Móvil'||bForm.payment==='Efectivo')&&<div><FF label="Tasa recibida (Bs/$)" value={bForm.tasa} onChange={v=>setBForm(p=>({...p,tasa:parseFloat(v)||0}))} type="number"/><p style={{fontSize:11,color:'#f59e0b',marginTop:4}}>= Bs. {(cp.priceUSD*bForm.tasa).toFixed(2)}</p></div>}
+          <div style={{background:'#060610',borderRadius:8,padding:12}}>{[['USD',`$${cp.priceUSD}`,'#00e5ff'],['Bolívares',`Bs. ${(cp.priceUSD*bForm.tasa).toFixed(2)}`,'#f59e0b'],['CLP',`$ ${(cp.priceUSD*settings.tasaCLP).toLocaleString()}`,'#a855f7']].map(([k,v,c])=><div key={k} style={{display:'flex',justifyContent:'space-between',padding:'4px 0'}}><span style={{fontSize:12,color:'#475569'}}>{k}:</span><span style={{fontWeight:700,color:c,fontSize:13}}>{v}</span></div>)}</div>
+          <button onClick={submitBuy} className="btn-p" style={{padding:'11px',borderRadius:8,fontSize:14}}>💬 ENVIAR PEDIDO POR WHATSAPP</button>
+        </div>
+      </Modal>}
+      {modal==='interest'&&cp&&<Modal title={`🔔 Avísame: ${cp.name}`} onClose={()=>setModal(null)}>
+        <p style={{color:'#475569',fontSize:13,marginBottom:16}}>Te notificaremos por WhatsApp cuando esté disponible.</p>
+        <div style={{display:'flex',flexDirection:'column',gap:12}}><FF label="Nombre *" value={iForm.name} onChange={v=>setIForm(p=>({...p,name:v}))}/><FF label="WhatsApp *" value={iForm.phone} onChange={v=>setIForm(p=>({...p,phone:v}))} placeholder="+584XXXXXXXXX"/><button onClick={submitInterest} className="btn-s" style={{padding:'11px',borderRadius:8,fontSize:14}}>✅ REGISTRAR INTERÉS</button></div>
+      </Modal>}
+    </div>
+  );
+}
+
+function DashTab({products,orders,expenses,clients,settings}) {
+  const done=orders.filter(o=>o.status==='completado');const sales=done.reduce((s,o)=>s+o.total,0);const exps=expenses.reduce((s,e)=>s+e.amount,0);const profit=sales-exps;
+  const wk=[{d:'Lun',v:18},{d:'Mar',v:0},{d:'Mié',v:45},{d:'Jue',v:12},{d:'Vie',v:63},{d:'Sáb',v:30},{d:'Dom',v:15}];
+  const stats=[{icon:'💵',label:'Ingresos',value:`$${sales}`,sub:`Bs. ${(sales*settings.tasaBCV).toFixed(0)}`,c:'#00e5ff'},{icon:'💸',label:'Gastos',value:`$${exps}`,sub:'USD',c:'#ef4444'},{icon:'📈',label:'Ganancia',value:`$${profit.toFixed(2)}`,sub:profit>=0?'✅ Positivo':'⚠️ Negativo',c:profit>=0?'#22c55e':'#ef4444'},{icon:'🛒',label:'Pendientes',value:orders.filter(o=>o.status==='pendiente').length,sub:'Por confirmar',c:'#f59e0b'},{icon:'👥',label:'Clientes',value:clients.length,sub:'Registrados',c:'#a855f7'},{icon:'⚠️',label:'Stock Bajo',value:products.filter(p=>p.stock<=2&&p.stock>0).length,sub:'≤2 unidades',c:'#f97316'}];
+  return (
+    <div className="fade">
+      <PH title="Dashboard" sub="Resumen de tu actividad"/>
+      <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:14,marginBottom:24}}>{stats.map(s=><div key={s.label} style={{background:'#0d0d20',border:`1px solid ${s.c}22`,borderRadius:11,padding:18,borderLeft:`3px solid ${s.c}`}}><div style={{fontSize:22,marginBottom:6}}>{s.icon}</div><div style={{fontSize:22,fontWeight:700,color:s.c,fontFamily:'Orbitron,sans-serif'}}>{s.value}</div><div style={{fontSize:11,color:'#475569',marginTop:3}}>{s.label}</div><div style={{fontSize:10,color:'#374151',marginTop:2}}>{s.sub}</div></div>)}</div>
+      <div style={{display:'grid',gridTemplateColumns:'1.3fr 1fr',gap:18,marginBottom:18}}>
+        <div className="panel" style={{padding:20}}><h3 style={{fontSize:13,fontWeight:700,marginBottom:14,color:'#00e5ff'}}>Ventas esta semana</h3><ResponsiveContainer width="100%" height={160}><BarChart data={wk}><XAxis dataKey="d" tick={{fill:'#475569',fontSize:11}} axisLine={false} tickLine={false}/><YAxis tick={{fill:'#475569',fontSize:11}} axisLine={false} tickLine={false}/><Tooltip contentStyle={{background:'#0d0d20',border:'1px solid #1e1e40',borderRadius:8,color:'#e2e8f0',fontSize:12}}/><Bar dataKey="v" fill="#00e5ff" radius={[4,4,0,0]} name="$"/></BarChart></ResponsiveContainer></div>
+        <div className="panel" style={{padding:20}}><h3 style={{fontSize:13,fontWeight:700,marginBottom:14,color:'#a855f7'}}>Últimos pedidos</h3>{orders.slice().reverse().slice(0,4).map(o=><div key={o.id} style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'7px 0',borderBottom:'1px solid #0f0f25'}}><div><div style={{fontSize:13,fontWeight:600}}>{o.client}</div><div style={{fontSize:10,color:'#475569'}}>{o.payment}</div></div><div style={{textAlign:'right'}}><div style={{fontSize:13,fontWeight:700,color:'#00e5ff'}}>${o.total}</div><span className={`tag ${o.status==='completado'?'tag-ok':o.status==='pendiente'?'tag-wr':'tag-no'}`}>{o.status}</span></div></div>)}</div>
+      </div>
+      {products.some(p=>p.waitlist&&p.waitlist.length>0)&&<div style={{background:'#f59e0b08',border:'1px solid #f59e0b33',borderRadius:11,padding:14,marginBottom:12}}><h3 style={{fontSize:13,fontWeight:700,color:'#f59e0b',marginBottom:8}}>🔔 Listas de Espera</h3><div style={{display:'flex',gap:8,flexWrap:'wrap'}}>{products.filter(p=>p.waitlist&&p.waitlist.length>0).map(p=><span key={p.id} style={{background:'#f59e0b11',border:'1px solid #f59e0b33',borderRadius:7,padding:'5px 12px',fontSize:12,color:'#f59e0b'}}>{p.em} {p.name}: {p.waitlist.length} esperando</span>)}</div></div>}
+      {products.filter(p=>p.stock<=2&&p.stock>0).length>0&&<div style={{background:'#f9730608',border:'1px solid #f9730633',borderRadius:11,padding:14}}><h3 style={{fontSize:13,fontWeight:700,color:'#f97316',marginBottom:8}}>⚠️ Stock Bajo</h3><div style={{display:'flex',gap:8,flexWrap:'wrap'}}>{products.filter(p=>p.stock<=2&&p.stock>0).map(p=><span key={p.id} style={{background:'#f9730611',border:'1px solid #f9730633',borderRadius:7,padding:'5px 12px',fontSize:12,color:'#f97316'}}>{p.em} {p.name}: {p.stock} und.</span>)}</div></div>}
+    </div>
+  );
+}
+
+function ProdTab({products,setProducts,settings,notify}) {
+  const [show,setShow]=useState(false);const [eid,setEid]=useState(null);
+  const emojis=['🎮','🕹️','🎧','🖱️','⌨️','🖥️','📱','⚡','🌟','🏆','👾','🤖','🎯','📦','🧩','🎲'];
+  const cats=['Consolas','Accesorios','PC Gaming','Coleccionables','Ropa Gamer','Otros'];
+  const [f,setF]=useState({name:'',desc:'',priceUSD:'',cost:'',stock:'',status:'available',cat:'Accesorios',em:'📦'});
+  const reset=()=>{setF({name:'',desc:'',priceUSD:'',cost:'',stock:'',status:'available',cat:'Accesorios',em:'📦'});setEid(null);setShow(false);};
+  const edit=(p)=>{setF({name:p.name,desc:p.desc,priceUSD:p.priceUSD,cost:p.cost,stock:p.stock,status:p.status,cat:p.cat,em:p.em});setEid(p.id);setShow(true);};
+  const save=()=>{if(!f.name||!f.priceUSD)return notify('Nombre y precio requeridos','error');const d={...f,priceUSD:parseFloat(f.priceUSD),cost:parseFloat(f.cost)||0,stock:parseInt(f.stock)||0,waitlist:[]};if(eid){setProducts(prev=>prev.map(p=>p.id===eid?{...p,...d}:p));notify('Actualizado ✅');}else{setProducts(prev=>[...prev,{...d,id:Date.now()}]);notify('Agregado ✅');}reset();};
+  const del=(id)=>{setProducts(prev=>prev.filter(p=>p.id!==id));notify('Eliminado','info');};
+  const toggleStatus=(id)=>setProducts(prev=>prev.map(p=>p.id===id?{...p,status:p.status==='available'?'agotado':'available'}:p));
+  return (
+    <div className="fade">
+      <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:22}}><PH title="Productos" sub={`${products.length} en catálogo`}/><button onClick={()=>setShow(!show)} className="btn-p" style={{padding:'9px 18px',borderRadius:8,fontSize:13}}>{show?'✕ Cancelar':'+ Agregar'}</button></div>
+      {show&&<div className="panel" style={{padding:22,marginBottom:22,border:'1px solid #00e5ff22'}}>
+        <h3 style={{fontSize:15,fontWeight:700,marginBottom:18,color:'#00e5ff'}}>{eid?'Editar':'Nuevo'} Producto</h3>
+        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:14}}>
+          <FF label="Nombre *" value={f.name} onChange={v=>setF(p=>({...p,name:v}))}/>
+          <div><label style={{fontSize:11,color:'#475569',textTransform:'uppercase',letterSpacing:1}}>Categoría</label><select value={f.cat} onChange={e=>setF(p=>({...p,cat:e.target.value}))} style={{marginTop:6,padding:'9px 12px',borderRadius:8,fontSize:13}}>{cats.map(c=><option key={c}>{c}</option>)}</select></div>
+          <div style={{gridColumn:'1/-1'}}><FF label="Descripción" value={f.desc} onChange={v=>setF(p=>({...p,desc:v}))}/></div>
+          <FF label="Precio venta (USD)*" value={f.priceUSD} onChange={v=>setF(p=>({...p,priceUSD:v}))} type="number"/>
+          <FF label="Costo (USD)" value={f.cost} onChange={v=>setF(p=>({...p,cost:v}))} type="number"/>
+          <FF label="Stock" value={f.stock} onChange={v=>setF(p=>({...p,stock:v}))} type="number"/>
+          <div><label style={{fontSize:11,color:'#475569',textTransform:'uppercase',letterSpacing:1}}>Estado</label><select value={f.status} onChange={e=>setF(p=>({...p,status:e.target.value}))} style={{marginTop:6,padding:'9px 12px',borderRadius:8,fontSize:13}}><option value="available">✅ Disponible</option><option value="agotado">❌ Agotado</option><option value="apartado">🟡 Apartado</option></select></div>
+          <div style={{gridColumn:'1/-1'}}><label style={{fontSize:11,color:'#475569',textTransform:'uppercase',letterSpacing:1,display:'block',marginBottom:8}}>Emoji</label><div style={{display:'flex',gap:6,flexWrap:'wrap'}}>{emojis.map(e=><button key={e} onClick={()=>setF(p=>({...p,em:e}))} style={{width:36,height:36,borderRadius:7,border:`2px solid ${f.em===e?'#00e5ff':'#1e1e40'}`,background:f.em===e?'#00e5ff11':'transparent',cursor:'pointer',fontSize:17}}>{e}</button>)}</div></div>
+        </div>
+        {f.priceUSD&&<div style={{background:'#060610',borderRadius:8,padding:11,marginTop:14,display:'flex',gap:16,flexWrap:'wrap',fontSize:12}}><span style={{color:'#475569'}}>USD: <strong style={{color:'#00e5ff'}}>${f.priceUSD}</strong></span><span style={{color:'#475569'}}>Bs: <strong style={{color:'#f59e0b'}}>{(f.priceUSD*settings.tasaBCV).toFixed(2)}</strong></span><span style={{color:'#475569'}}>CLP: <strong style={{color:'#a855f7'}}>${(f.priceUSD*settings.tasaCLP).toLocaleString()}</strong></span>{f.cost&&<span style={{color:'#22c55e',fontWeight:700}}>Ganancia: ${(f.priceUSD-f.cost).toFixed(2)}</span>}</div>}
+        <div style={{display:'flex',gap:10,marginTop:18}}><button onClick={save} className="btn-p" style={{padding:'9px 22px',borderRadius:8,fontSize:13}}>{eid?'💾 Guardar':'✅ Agregar'}</button><button onClick={reset} className="btn-s" style={{padding:'9px 22px',borderRadius:8,fontSize:13}}>Cancelar</button></div>
+      </div>}
+      <div className="panel" style={{overflow:'auto'}}>
+        <table style={{width:'100%',borderCollapse:'collapse',minWidth:500}}>
+          <thead><tr style={{borderBottom:'1px solid #1e1e40'}}>{['Producto','USD','Bs','Stock','Estado',''].map(h=><th key={h} style={{padding:'11px 14px',textAlign:'left',fontSize:10,color:'#475569',textTransform:'uppercase',letterSpacing:1,fontWeight:600}}>{h}</th>)}</tr></thead>
+          <tbody>{products.map(p=><tr key={p.id} style={{borderBottom:'1px solid #0f0f25'}}>
+            <td style={{padding:'11px 14px'}}><div style={{display:'flex',alignItems:'center',gap:9}}><span style={{fontSize:22}}>{p.em}</span><div><div style={{fontSize:13,fontWeight:600}}>{p.name}</div><div style={{fontSize:10,color:'#475569'}}>{p.cat}</div></div></div></td>
+            <td style={{padding:'11px 14px',color:'#00e5ff',fontWeight:700}}>${p.priceUSD}</td>
+            <td style={{padding:'11px 14px',color:'#f59e0b',fontSize:12}}>Bs.{(p.priceUSD*settings.tasaBCV).toFixed(0)}</td>
+            <td style={{padding:'11px 14px'}}><span style={{color:p.stock<=2?'#ef4444':p.stock<=5?'#f59e0b':'#22c55e',fontWeight:700}}>{p.stock}</span></td>
+            <td style={{padding:'11px 14px'}}><button onClick={()=>toggleStatus(p.id)} className={`tag ${p.status==='available'?'tag-ok':p.status==='agotado'?'tag-no':'tag-wr'}`} style={{cursor:'pointer',border:'none',fontFamily:"'Exo 2'"}}>{p.status}</button></td>
+            <td style={{padding:'11px 14px'}}><div style={{display:'flex',gap:6}}><button onClick={()=>edit(p)} style={{background:'#00e5ff11',border:'1px solid #00e5ff44',color:'#00e5ff',padding:'4px 9px',borderRadius:6,cursor:'pointer',fontSize:11}}>✏️</button><button onClick={()=>del(p.id)} style={{background:'#ef444411',border:'1px solid #ef444444',color:'#ef4444',padding:'4px 9px',borderRadius:6,cursor:'pointer',fontSize:11}}>🗑️</button></div></td>
+          </tr>)}</tbody>
+        </table>
+      </div>
+      {products.some(p=>p.waitlist&&p.waitlist.length>0)&&<div style={{marginTop:20}}><h3 style={{fontSize:14,fontWeight:700,marginBottom:12,color:'#f59e0b'}}>🔔 Listas de Espera</h3>{products.filter(p=>p.waitlist&&p.waitlist.length>0).map(p=><div key={p.id} className="panel" style={{padding:14,marginBottom:8,border:'1px solid #f59e0b22'}}><div style={{display:'flex',justifyContent:'space-between',marginBottom:8}}><span style={{fontWeight:700}}>{p.em} {p.name}</span><span style={{fontSize:12,color:'#f59e0b'}}>{p.waitlist.length} esperando</span></div>{p.waitlist.map((w,i)=><div key={i} style={{display:'flex',justifyContent:'space-between',padding:'6px 0',borderBottom:'1px solid #0f0f25',fontSize:13}}><span>{w.name} · {w.phone}</span><a href={`https://wa.me/${w.phone.replace(/\D/g,'')}?text=${encodeURIComponent(`¡Hola ${w.name}! 🎮 *${p.name}* ya está disponible en Rocco Gaming por $${p.priceUSD} USD. ¡Escríbenos! 🔥`)}`} target="_blank" rel="noreferrer" style={{color:'#22c55e',textDecoration:'none',fontSize:12}}>💬 Notificar</a></div>)}</div>)}</div>}
+    </div>
+  );
+}
+
+function OrderTab({orders,setOrders,products,setProducts,clients,setClients,settings,notify}) {
+  const [show,setShow]=useState(false);
+  const [f,setF]=useState({client:'',phone:'',email:'',pid:'',payment:'Binance',tasa:settings.tasaBCV,status:'pendiente'});
+  const add=()=>{if(!f.client||!f.pid)return notify('Cliente y producto requeridos','error');const prod=products.find(p=>p.id===parseInt(f.pid));if(!prod)return;const order={id:Date.now(),client:f.client,phone:f.phone,email:f.email,products:[prod.name],total:prod.priceUSD,payment:f.payment,status:f.status,date:new Date().toISOString().split('T')[0],tasa:parseFloat(f.tasa)};setOrders(prev=>[...prev,order]);if(f.status==='completado'){setProducts(prev=>prev.map(p=>p.id===prod.id?{...p,stock:Math.max(0,p.stock-1)}:p));const ex=clients.find(c=>c.phone===f.phone);if(ex)setClients(prev=>prev.map(c=>c.phone===f.phone?{...c,purchases:c.purchases+1,total:c.total+prod.priceUSD,lastBuy:order.date}:c));else if(f.phone)setClients(prev=>[...prev,{id:Date.now(),name:f.client,phone:f.phone,email:f.email,purchases:1,total:prod.priceUSD,lastBuy:order.date}]);}notify('Pedido registrado ✅');setShow(false);setF({client:'',phone:'',email:'',pid:'',payment:'Binance',tasa:settings.tasaBCV,status:'pendiente'});};
+  const confirm=(id)=>{const o=orders.find(x=>x.id===id);if(o.status==='completado')return;const prod=products.find(p=>p.name===o.products[0]);if(prod)setProducts(prev=>prev.map(p=>p.id===prod.id?{...p,stock:Math.max(0,p.stock-1)}:p));setOrders(prev=>prev.map(x=>x.id===id?{...x,status:'completado'}:x));notify('✅ Confirmado · Stock actualizado');};
+  const sendWA=(o)=>{const msg=encodeURIComponent(`🎮 *ROCCO GAMING*\n\n¡Gracias ${o.client}! 🙌\n📦 ${o.products.join(', ')}\n💵 $${o.total} USD · Bs. ${(o.total*o.tasa).toFixed(2)}\n💳 ${o.payment}\n\n¡Gracias por Rocco Gaming! 🎯`);window.open(`https://wa.me/${o.phone.replace(/\D/g,'')}?text=${msg}`,'_blank');};
+  return (
+    <div className="fade">
+      <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:22}}><PH title="Pedidos" sub={`${orders.length} registrados`}/><button onClick={()=>setShow(!show)} className="btn-p" style={{padding:'9px 18px',borderRadius:8,fontSize:13}}>+ Nuevo</button></div>
+      {show&&<div className="panel" style={{padding:22,marginBottom:22,border:'1px solid #00e5ff22'}}>
+        <h3 style={{fontSize:15,fontWeight:700,marginBottom:16,color:'#00e5ff'}}>Registrar Pedido</h3>
+        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:14}}>
+          <FF label="Cliente *" value={f.client} onChange={v=>setF(p=>({...p,client:v}))}/><FF label="Teléfono" value={f.phone} onChange={v=>setF(p=>({...p,phone:v}))}/>
+          <div><label style={{fontSize:11,color:'#475569',textTransform:'uppercase',letterSpacing:1}}>Producto *</label><select value={f.pid} onChange={e=>setF(p=>({...p,pid:e.target.value}))} style={{marginTop:6,padding:'9px 12px',borderRadius:8,fontSize:13}}><option value="">-- Seleccionar --</option>{products.map(p=><option key={p.id} value={p.id}>{p.em} {p.name} · ${p.priceUSD}</option>)}</select></div>
+          <div><label style={{fontSize:11,color:'#475569',textTransform:'uppercase',letterSpacing:1}}>Pago</label><select value={f.payment} onChange={e=>setF(p=>({...p,payment:e.target.value}))} style={{marginTop:6,padding:'9px 12px',borderRadius:8,fontSize:13}}><option value="Binance">🔶 Binance</option><option value="Pago Móvil">📱 Pago Móvil</option><option value="Efectivo">💵 Efectivo</option></select></div>
+          <div><label style={{fontSize:11,color:'#475569',textTransform:'uppercase',letterSpacing:1}}>Estado</label><select value={f.status} onChange={e=>setF(p=>({...p,status:e.target.value}))} style={{marginTop:6,padding:'9px 12px',borderRadius:8,fontSize:13}}><option value="pendiente">⏳ Pendiente</option><option value="completado">✅ Completado</option><option value="cancelado">❌ Cancelado</option></select></div>
+          {(f.payment==='Pago Móvil'||f.payment==='Efectivo')&&<div><FF label="Tasa (Bs/$)" value={f.tasa} onChange={v=>setF(p=>({...p,tasa:v}))} type="number"/>{f.pid&&<p style={{fontSize:11,color:'#f59e0b',marginTop:4}}>= Bs. {((products.find(p=>p.id===parseInt(f.pid))?.priceUSD||0)*f.tasa).toFixed(2)}</p>}</div>}
+        </div>
+        <div style={{marginTop:14,display:'flex',gap:10}}><button onClick={add} className="btn-p" style={{padding:'9px 22px',borderRadius:8,fontSize:13}}>✅ Registrar</button><button onClick={()=>setShow(false)} className="btn-s" style={{padding:'9px 22px',borderRadius:8,fontSize:13}}>Cancelar</button></div>
+      </div>}
+      <div style={{display:'flex',flexDirection:'column',gap:9}}>{orders.slice().reverse().map(o=><div key={o.id} className="panel" style={{padding:16,border:`1px solid ${o.status==='completado'?'#22c55e22':o.status==='pendiente'?'#f59e0b22':'#ef444422'}`}}>
+        <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',flexWrap:'wrap',gap:10}}>
+          <div><div style={{display:'flex',alignItems:'center',gap:8,marginBottom:4}}><span style={{fontWeight:700,fontSize:14}}>{o.client}</span><span className={`tag ${o.status==='completado'?'tag-ok':o.status==='pendiente'?'tag-wr':'tag-no'}`}>{o.status}</span></div><div style={{fontSize:11,color:'#475569'}}>{o.date} · {o.payment}</div><div style={{fontSize:11,color:'#94a3b8',marginTop:2}}>📦 {o.products.join(', ')}</div></div>
+          <div style={{textAlign:'right'}}><div style={{fontSize:18,fontWeight:700,color:'#00e5ff',fontFamily:'Orbitron,sans-serif'}}>${o.total}</div><div style={{fontSize:11,color:'#f59e0b'}}>Bs. {(o.total*o.tasa).toFixed(2)}</div></div>
+        </div>
+        <div style={{display:'flex',gap:8,marginTop:12,flexWrap:'wrap'}}>
+          {o.status==='pendiente'&&<button onClick={()=>confirm(o.id)} style={{background:'#22c55e11',border:'1px solid #22c55e44',color:'#22c55e',padding:'5px 12px',borderRadius:7,cursor:'pointer',fontSize:12,fontFamily:"'Exo 2'"}}>✅ Confirmar</button>}
+          {o.phone&&<button onClick={()=>sendWA(o)} style={{background:'#25d36611',border:'1px solid #25d36644',color:'#25d366',padding:'5px 12px',borderRadius:7,cursor:'pointer',fontSize:12,fontFamily:"'Exo 2'"}}>💬 WA</button>}
+          {o.status!=='cancelado'&&<button onClick={()=>setOrders(prev=>prev.map(x=>x.id===o.id?{...x,status:'cancelado'}:x))} style={{background:'#ef444411',border:'1px solid #ef444444',color:'#ef4444',padding:'5px 12px',borderRadius:7,cursor:'pointer',fontSize:12,fontFamily:"'Exo 2'"}}>✕ Cancelar</button>}
+        </div>
+      </div>)}</div>
+    </div>
+  );
+}
+
+function ExpTab({expenses,setExpenses,notify}) {
+  const [show,setShow]=useState(false);const [pdfInfo,setPdfInfo]=useState('');
+  const [f,setF]=useState({desc:'',amount:'',currency:'USD',type:'compra',date:new Date().toISOString().split('T')[0]});
+  const handleFile=(e)=>{const file=e.target.files[0];if(!file)return;const reader=new FileReader();reader.onload=(ev)=>{const text=ev.target.result;const am=text.match(/\$?\s*(\d{1,6}[.,]\d{2})/);const dm=text.match(/(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4})/);let info=`📄 ${file.name}`;if(am){info+=`\n💰 ${am[1]}`;setF(p=>({...p,amount:am[1].replace(',','.'),desc:file.name.replace(/\.pdf$/i,'').replace(/_/g,' ')}));}if(dm)info+=`\n📅 ${dm[1]}`;setPdfInfo(info);notify('Analizado ✅','info');};reader.readAsText(file);};
+  const save=()=>{if(!f.desc||!f.amount)return notify('Descripción y monto requeridos','error');setExpenses(prev=>[...prev,{...f,id:Date.now(),amount:parseFloat(f.amount)}]);notify('Registrado ✅');setShow(false);setF({desc:'',amount:'',currency:'USD',type:'compra',date:new Date().toISOString().split('T')[0]});setPdfInfo('');};
+  const types={compra:'🛍️',envio:'📦',marketing:'📢',servicio:'⚙️',otro:'💸'};
+  const total=expenses.filter(e=>e.currency==='USD').reduce((s,e)=>s+e.amount,0);
+  return (
+    <div className="fade">
+      <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:22}}><PH title="Gastos & Inversiones" sub={`Total USD: $${total.toFixed(2)}`}/><button onClick={()=>setShow(!show)} className="btn-p" style={{padding:'9px 18px',borderRadius:8,fontSize:13}}>+ Registrar</button></div>
+      {show&&<div className="panel" style={{padding:22,marginBottom:22,border:'1px solid #00e5ff22'}}>
+        <div style={{background:'#060610',border:'2px dashed #1e1e40',borderRadius:10,padding:16,marginBottom:16,textAlign:'center'}}>
+          <p style={{color:'#475569',fontSize:12,marginBottom:10}}>📄 Subí tu factura PDF — el sistema extrae el monto automáticamente</p>
+          <input type="file" accept=".pdf,.txt" onChange={handleFile} style={{display:'none'}} id="pdf-up"/>
+          <label htmlFor="pdf-up" style={{background:'#00e5ff11',border:'1px solid #00e5ff44',color:'#00e5ff',padding:'7px 16px',borderRadius:7,cursor:'pointer',fontSize:13,display:'inline-block'}}>📎 Subir Comprobante</label>
+          {pdfInfo&&<pre style={{marginTop:10,fontSize:12,color:'#a855f7',textAlign:'left',background:'#0d0d20',padding:10,borderRadius:7,whiteSpace:'pre-wrap'}}>{pdfInfo}</pre>}
+        </div>
+        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:14}}>
+          <div style={{gridColumn:'1/-1'}}><FF label="Descripción *" value={f.desc} onChange={v=>setF(p=>({...p,desc:v}))}/></div>
+          <FF label="Monto *" value={f.amount} onChange={v=>setF(p=>({...p,amount:v}))} type="number"/>
+          <div><label style={{fontSize:11,color:'#475569',textTransform:'uppercase',letterSpacing:1}}>Moneda</label><select value={f.currency} onChange={e=>setF(p=>({...p,currency:e.target.value}))} style={{marginTop:6,padding:'9px 12px',borderRadius:8,fontSize:13}}><option value="USD">💵 USD</option><option value="Bs">🇻🇪 Bs</option><option value="CLP">🇨🇱 CLP</option></select></div>
+          <div><label style={{fontSize:11,color:'#475569',textTransform:'uppercase',letterSpacing:1}}>Tipo</label><select value={f.type} onChange={e=>setF(p=>({...p,type:e.target.value}))} style={{marginTop:6,padding:'9px 12px',borderRadius:8,fontSize:13}}><option value="compra">🛍️ Compra</option><option value="envio">📦 Envío</option><option value="marketing">📢 Marketing</option><option value="servicio">⚙️ Servicio</option><option value="otro">💸 Otro</option></select></div>
+          <FF label="Fecha" value={f.date} onChange={v=>setF(p=>({...p,date:v}))} type="date"/>
+        </div>
+        <div style={{display:'flex',gap:10,marginTop:16}}><button onClick={save} className="btn-p" style={{padding:'9px 22px',borderRadius:8,fontSize:13}}>💾 Guardar</button><button onClick={()=>setShow(false)} className="btn-s" style={{padding:'9px 22px',borderRadius:8,fontSize:13}}>Cancelar</button></div>
+      </div>}
+      <div style={{display:'flex',flexDirection:'column',gap:8}}>{expenses.slice().reverse().map(e=><div key={e.id} className="panel" style={{padding:'12px 16px',display:'flex',justifyContent:'space-between',alignItems:'center'}}><div style={{display:'flex',alignItems:'center',gap:10}}><span style={{fontSize:22}}>{types[e.type]||'💸'}</span><div><div style={{fontSize:13,fontWeight:600}}>{e.desc}</div><div style={{fontSize:11,color:'#475569'}}>{e.date} · {e.type}</div></div></div><div style={{fontWeight:700,color:'#ef4444',fontSize:16}}>-{e.amount} {e.currency}</div></div>)}</div>
+    </div>
+  );
+}
+
+function CRMTab({clients}) {
+  const [search,setSearch]=useState('');
+  const filtered=clients.filter(c=>c.name.toLowerCase().includes(search.toLowerCase())||c.phone.includes(search));
+  const best=clients.slice().sort((a,b)=>b.total-a.total)[0];
+  return (
+    <div className="fade"><PH title="Clientes (CRM)" sub={`${clients.length} registrados`}/>
+      <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:14,marginBottom:20}}>{[{label:'Total',value:clients.length,c:'#00e5ff'},{label:'Frecuentes (2+)',value:clients.filter(c=>c.purchases>=2).length,c:'#a855f7'},{label:'Top Cliente',value:best?.name||'—',c:'#f59e0b'}].map(s=><div key={s.label} style={{background:'#0d0d20',border:`1px solid ${s.c}22`,borderRadius:11,padding:18,borderLeft:`3px solid ${s.c}`}}><div style={{fontSize:20,fontWeight:700,color:s.c}}>{s.value}</div><div style={{fontSize:11,color:'#475569',marginTop:3}}>{s.label}</div></div>)}</div>
+      <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="🔍 Buscar..." style={{padding:'9px 14px',borderRadius:8,fontSize:13,marginBottom:14}}/>
+      <div style={{display:'flex',flexDirection:'column',gap:9}}>{filtered.map(c=><div key={c.id} className="panel" style={{padding:16}}><div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}><div style={{display:'flex',alignItems:'center',gap:11}}><div style={{width:40,height:40,borderRadius:'50%',background:'#00e5ff11',display:'flex',alignItems:'center',justifyContent:'center',fontWeight:700,color:'#00e5ff',border:'1px solid #00e5ff22'}}>{c.name.charAt(0)}</div><div><div style={{fontWeight:700,fontSize:14}}>{c.name}</div><div style={{fontSize:12,color:'#475569'}}>{c.phone}</div><div style={{fontSize:11,color:'#374151',marginTop:1}}>{c.lastBuy}</div></div></div><div style={{textAlign:'right'}}><div style={{fontSize:18,fontWeight:700,color:'#00e5ff'}}>${c.total}</div><div style={{fontSize:12,color:'#475569'}}>{c.purchases} compra(s)</div></div></div><div style={{display:'flex',gap:8,marginTop:10}}><a href={`https://wa.me/${c.phone.replace(/\D/g,'')}`} target="_blank" rel="noreferrer" style={{background:'#25d36611',border:'1px solid #25d36644',color:'#25d366',padding:'5px 12px',borderRadius:7,fontSize:12,textDecoration:'none'}}>💬 WhatsApp</a>{c.email&&<a href={`mailto:${c.email}`} style={{background:'#00e5ff11',border:'1px solid #00e5ff44',color:'#00e5ff',padding:'5px 12px',borderRadius:7,fontSize:12,textDecoration:'none'}}>✉️ Email</a>}</div></div>)}</div>
+    </div>
+  );
+}
+
+function FinTab({orders,expenses,settings}) {
+  const done=orders.filter(o=>o.status==='completado');const sales=done.reduce((s,o)=>s+o.total,0);const exps=expenses.reduce((s,e)=>s+e.amount,0);const profit=sales-exps;const margin=sales>0?((profit/sales)*100).toFixed(1):0;
+  const monthly=[{m:'Ene',v:120,g:80},{m:'Feb',v:180,g:95},{m:'Mar',v:sales,g:exps}];
+  const pmt=done.reduce((a,o)=>{a[o.payment]=(a[o.payment]||0)+o.total;return a},{});
+  return (
+    <div className="fade"><PH title="Finanzas" sub="Análisis económico"/>
+      <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:14,marginBottom:20}}>{[{icon:'📈',label:'Ingresos',value:`$${sales.toFixed(2)}`,c:'#22c55e'},{icon:'📉',label:'Gastos',value:`$${exps.toFixed(2)}`,c:'#ef4444'},{icon:'💰',label:'Ganancia',value:`$${profit.toFixed(2)}`,c:profit>=0?'#00e5ff':'#ef4444'},{icon:'📊',label:'Margen',value:`${margin}%`,c:'#a855f7'}].map(c=><div key={c.label} style={{background:'#0d0d20',border:`1px solid ${c.c}22`,borderRadius:11,padding:16,borderLeft:`3px solid ${c.c}`}}><div style={{fontSize:20}}>{c.icon}</div><div style={{fontSize:18,fontWeight:700,color:c.c,fontFamily:'Orbitron,sans-serif',marginTop:5}}>{c.value}</div><div style={{fontSize:11,color:'#475569',marginTop:2}}>{c.label}</div></div>)}</div>
+      <div className="panel" style={{padding:18,marginBottom:16}}><h3 style={{fontSize:13,fontWeight:700,marginBottom:12,color:'#f59e0b'}}>💱 Multi-moneda</h3><div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:10}}>{[['USD','#00e5ff',`$${profit.toFixed(2)}`],[`Bs ×${settings.tasaBCV}`,'#f59e0b',`Bs. ${(profit*settings.tasaBCV).toFixed(2)}`],[`CLP ×${settings.tasaCLP}`,'#a855f7',`$ ${(profit*settings.tasaCLP).toLocaleString()}`]].map(([label,c,v])=><div key={label} style={{textAlign:'center',padding:14,background:'#060610',borderRadius:9}}><div style={{fontSize:18,fontWeight:700,color:c}}>{v}</div><div style={{fontSize:10,color:'#475569',marginTop:3}}>{label}</div></div>)}</div></div>
+      <div style={{display:'grid',gridTemplateColumns:'1.5fr 1fr',gap:16}}>
+        <div className="panel" style={{padding:18}}><h3 style={{fontSize:13,fontWeight:700,marginBottom:12,color:'#00e5ff'}}>Ventas vs Gastos</h3><ResponsiveContainer width="100%" height={180}><BarChart data={monthly}><XAxis dataKey="m" tick={{fill:'#475569',fontSize:11}} axisLine={false} tickLine={false}/><YAxis tick={{fill:'#475569',fontSize:11}} axisLine={false} tickLine={false}/><Tooltip contentStyle={{background:'#0d0d20',border:'1px solid #1e1e40',borderRadius:8,fontSize:12}}/><Bar dataKey="v" fill="#00e5ff" name="Ventas" radius={[4,4,0,0]}/><Bar dataKey="g" fill="#ef4444" name="Gastos" radius={[4,4,0,0]}/></BarChart></ResponsiveContainer></div>
+        <div className="panel" style={{padding:18}}><h3 style={{fontSize:13,fontWeight:700,marginBottom:12,color:'#a855f7'}}>Por Método</h3>{Object.entries(pmt).map(([m,t])=><div key={m} style={{display:'flex',justifyContent:'space-between',padding:'8px 0',borderBottom:'1px solid #0f0f25'}}><span style={{fontSize:13}}>{m}</span><span style={{color:'#00e5ff',fontWeight:700}}>${t.toFixed(2)}</span></div>)}<div style={{marginTop:12,padding:10,background:'#060610',borderRadius:8}}><p style={{fontSize:12,color:'#22c55e'}}>↑ {done.length} ventas</p><p style={{fontSize:12,color:'#ef4444',marginTop:2}}>↓ {expenses.length} gastos</p><p style={{fontSize:12,color:profit>=0?'#00e5ff':'#ef4444',marginTop:2,fontWeight:700}}>= ${profit.toFixed(2)} USD</p></div></div>
+      </div>
+    </div>
+  );
+}
+
+function CalcTab({settings}) {
+  const [cost,setCost]=useState('');const [mg,setMg]=useState(40);const [amt,setAmt]=useState('');const [from,setFrom]=useState('USD');
+  const [zone,setZone]=useState(0);const [weight,setWeight]=useState('');const [apPrice,setApPrice]=useState('');const [apPct,setApPct]=useState(50);
+  const sug=cost?((parseFloat(cost))*(1+mg/100)).toFixed(2):'';
+  const deliver=(settings.deliveryZones[zone]?.price||0)+(weight?parseFloat(weight)*0.5:0);
+  const deposit=apPrice?(parseFloat(apPrice)*apPct/100).toFixed(2):'';
+  const balance=deposit?(parseFloat(apPrice)-parseFloat(deposit)).toFixed(2):'';
+  const conv=()=>{const a=parseFloat(amt)||0;if(from==='USD')return{USD:a,Bs:(a*settings.tasaBCV).toFixed(2),CLP:(a*settings.tasaCLP).toLocaleString()};if(from==='Bs')return{Bs:a,USD:(a/settings.tasaBCV).toFixed(2),CLP:((a/settings.tasaBCV)*settings.tasaCLP).toLocaleString()};return{CLP:a,USD:(a/settings.tasaCLP).toFixed(2),Bs:((a/settings.tasaCLP)*settings.tasaBCV).toFixed(2)};};
+  return (
+    <div className="fade"><PH title="Calculadoras" sub="Herramientas rápidas"/>
+      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:18}}>
+        <div className="panel" style={{padding:22,border:'1px solid #00e5ff22'}}><h3 style={{fontSize:14,fontWeight:700,marginBottom:16,color:'#00e5ff'}}>🧮 Precio con Margen</h3><FF label="Costo (USD)" value={cost} onChange={setCost} type="number"/><div style={{marginTop:14}}><label style={{fontSize:11,color:'#475569',textTransform:'uppercase',letterSpacing:1}}>Margen: {mg}%</label><input type="range" min="5" max="300" value={mg} onChange={e=>setMg(parseInt(e.target.value))} style={{marginTop:8,accentColor:'#00e5ff',background:'transparent',border:'none'}}/></div>{cost&&<div style={{marginTop:14,background:'#060610',borderRadius:9,padding:14}}><div style={{fontSize:26,fontWeight:700,color:'#00e5ff',fontFamily:'Orbitron,sans-serif'}}>${sug}</div><div style={{fontSize:12,color:'#f59e0b',marginTop:5}}>Bs. {(parseFloat(sug)*settings.tasaBCV).toFixed(2)}</div><div style={{fontSize:11,color:'#a855f7'}}>$ {(parseFloat(sug)*settings.tasaCLP).toLocaleString()} CLP</div><div style={{borderTop:'1px solid #1e1e40',marginTop:8,paddingTop:8,fontSize:12,color:'#22c55e',fontWeight:700}}>Ganancia: ${(parseFloat(sug)-parseFloat(cost)).toFixed(2)}</div></div>}</div>
+        <div className="panel" style={{padding:22,border:'1px solid #a855f722'}}><h3 style={{fontSize:14,fontWeight:700,marginBottom:16,color:'#a855f7'}}>💱 Convertidor</h3><div style={{display:'flex',gap:10}}><div style={{flex:1}}><FF label="Monto" value={amt} onChange={setAmt} type="number"/></div><div style={{flex:'0 0 88px'}}><label style={{fontSize:11,color:'#475569',textTransform:'uppercase',letterSpacing:1}}>Desde</label><select value={from} onChange={e=>setFrom(e.target.value)} style={{marginTop:6,padding:'9px 8px',borderRadius:8,fontSize:13}}><option value="USD">USD</option><option value="Bs">Bs</option><option value="CLP">CLP</option></select></div></div>{amt&&<div style={{marginTop:12,background:'#060610',borderRadius:9,padding:14}}>{Object.entries(conv()).map(([cur,val])=><div key={cur} style={{display:'flex',justifyContent:'space-between',padding:'7px 0',borderBottom:'1px solid #0f0f25'}}><span style={{fontSize:13,color:'#475569'}}>{cur}</span><span style={{fontWeight:700,color:cur==='USD'?'#00e5ff':cur==='Bs'?'#f59e0b':'#a855f7',fontSize:15}}>{val}</span></div>)}</div>}<div style={{marginTop:10,padding:9,background:'#060610',borderRadius:8,fontSize:11,color:'#475569'}}>BCV: Bs.{settings.tasaBCV} · CLP: {settings.tasaCLP}</div></div>
+        <div className="panel" style={{padding:22,border:'1px solid #22c55e22'}}><h3 style={{fontSize:14,fontWeight:700,marginBottom:16,color:'#22c55e'}}>🚚 Delivery</h3><div style={{marginBottom:14}}><label style={{fontSize:11,color:'#475569',textTransform:'uppercase',letterSpacing:1}}>Zona</label><select value={zone} onChange={e=>setZone(parseInt(e.target.value))} style={{marginTop:6,padding:'9px 12px',borderRadius:8,fontSize:13}}>{settings.deliveryZones.map((z,i)=><option key={i} value={i}>{z.name} · ${z.price}</option>)}</select></div><FF label="Peso (kg)" value={weight} onChange={setWeight} type="number"/><div style={{marginTop:14,background:'#060610',borderRadius:9,padding:14}}><div style={{display:'flex',justifyContent:'space-between',marginBottom:5}}><span style={{fontSize:12,color:'#475569'}}>Base:</span><span style={{color:'#22c55e'}}>${settings.deliveryZones[zone]?.price||0}</span></div>{weight&&<div style={{display:'flex',justifyContent:'space-between',marginBottom:5}}><span style={{fontSize:12,color:'#475569'}}>{weight}kg:</span><span style={{color:'#22c55e'}}>${(parseFloat(weight)*0.5).toFixed(2)}</span></div>}<div style={{display:'flex',justifyContent:'space-between',borderTop:'1px solid #1e1e40',paddingTop:7,marginTop:3}}><span style={{fontWeight:700}}>Total:</span><div style={{textAlign:'right'}}><div style={{color:'#22c55e',fontWeight:700,fontFamily:'Orbitron,sans-serif',fontSize:17}}>${deliver.toFixed(2)}</div><div style={{fontSize:11,color:'#f59e0b'}}>Bs. {(deliver*settings.tasaBCV).toFixed(2)}</div></div></div></div></div>
+        <div className="panel" style={{padding:22,border:'1px solid #f59e0b22'}}><h3 style={{fontSize:14,fontWeight:700,marginBottom:16,color:'#f59e0b'}}>🔒 Apartado</h3><FF label="Precio (USD)" value={apPrice} onChange={setApPrice} type="number"/><div style={{marginTop:14}}><label style={{fontSize:11,color:'#475569',textTransform:'uppercase',letterSpacing:1}}>Inicial: {apPct}%</label><input type="range" min="10" max="90" step="10" value={apPct} onChange={e=>setApPct(parseInt(e.target.value))} style={{marginTop:8,accentColor:'#f59e0b',background:'transparent',border:'none'}}/></div>{apPrice&&<div style={{marginTop:12,background:'#060610',borderRadius:9,padding:14}}><div style={{display:'flex',justifyContent:'space-between',marginBottom:7}}><span style={{fontSize:12,color:'#475569'}}>Inicial ({apPct}%):</span><div style={{textAlign:'right'}}><div style={{color:'#22c55e',fontWeight:700}}>${deposit}</div><div style={{fontSize:11,color:'#f59e0b'}}>Bs. {(deposit*settings.tasaBCV).toFixed(2)}</div></div></div><div style={{display:'flex',justifyContent:'space-between'}}><span style={{fontSize:12,color:'#475569'}}>Saldo:</span><div style={{color:'#f59e0b',fontWeight:700}}>${balance}</div></div><button onClick={()=>{const msg=encodeURIComponent(`🔒 *APARTADO - ROCCO GAMING*\n\nTotal: $${apPrice}\nInicial: $${deposit} · Bs.${(deposit*settings.tasaBCV).toFixed(2)}\nSaldo: $${balance}\n\n¡Gracias! 🎮`);window.open(`https://wa.me/${WA}?text=${msg}`,'_blank');}} style={{width:'100%',marginTop:10,background:'#f59e0b11',border:'1px solid #f59e0b44',color:'#f59e0b',padding:8,borderRadius:8,cursor:'pointer',fontSize:13,fontFamily:"'Exo 2'"}}>💬 Enviar por WA</button></div>}</div>
+      </div>
+    </div>
+  );
+}
+
+function SetTab({settings,setSettings,notify}) {
+  const [f,setF]=useState({...settings});
+  const save=()=>{setSettings(f);notify('✅ Guardado');};
+  return (
+    <div className="fade"><PH title="Ajustes" sub="Configuración"/>
+      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:18}}>
+        <div className="panel" style={{padding:22}}><h3 style={{fontSize:14,fontWeight:700,marginBottom:14,color:'#f59e0b'}}>💱 Tasas</h3><div style={{display:'flex',flexDirection:'column',gap:12}}><FF label="BCV (Bs/$)" value={f.tasaBCV} onChange={v=>setF(p=>({...p,tasaBCV:parseFloat(v)||0}))} type="number"/><FF label="Paralelo" value={f.tasaParalelo} onChange={v=>setF(p=>({...p,tasaParalelo:parseFloat(v)||0}))} type="number"/><FF label="CLP/USD" value={f.tasaCLP} onChange={v=>setF(p=>({...p,tasaCLP:parseFloat(v)||0}))} type="number"/></div></div>
+        <div className="panel" style={{padding:22}}><h3 style={{fontSize:14,fontWeight:700,marginBottom:14,color:'#00e5ff'}}>💳 Datos de Pago</h3><div style={{display:'flex',flexDirection:'column',gap:12}}><FF label="Binance User" value={f.binanceUser} onChange={v=>setF(p=>({...p,binanceUser:v}))}/><FF label="Pago Móvil" value={f.pagoMovil} onChange={v=>setF(p=>({...p,pagoMovil:v}))}/><FF label="Banco" value={f.banco} onChange={v=>setF(p=>({...p,banco:v}))}/><FF label="Cédula" value={f.cedula} onChange={v=>setF(p=>({...p,cedula:v}))}/></div></div>
+        <div className="panel" style={{padding:22}}><h3 style={{fontSize:14,fontWeight:700,marginBottom:14,color:'#22c55e'}}>🚚 Delivery</h3>{f.deliveryZones.map((z,i)=><div key={i} style={{display:'flex',gap:10,marginBottom:10}}><input value={z.name} onChange={e=>setF(p=>({...p,deliveryZones:p.deliveryZones.map((dz,j)=>j===i?{...dz,name:e.target.value}:dz)}))} style={{flex:2,padding:'8px 11px',borderRadius:8,fontSize:12}}/><div style={{display:'flex',alignItems:'center',gap:5}}><span style={{color:'#475569'}}>$</span><input type="number" value={z.price} onChange={e=>setF(p=>({...p,deliveryZones:p.deliveryZones.map((dz,j)=>j===i?{...dz,price:parseFloat(e.target.value)||0}:dz)}))} style={{width:60,padding:'8px',borderRadius:8,fontSize:12}}/></div><button onClick={()=>setF(p=>({...p,deliveryZones:p.deliveryZones.filter((_,j)=>j!==i)}))} style={{background:'#ef444411',border:'1px solid #ef444444',color:'#ef4444',padding:'4px 8px',borderRadius:7,cursor:'pointer',fontSize:12}}>✕</button></div>)}<button onClick={()=>setF(p=>({...p,deliveryZones:[...p.deliveryZones,{name:'Nueva Zona',price:5}]}))} style={{background:'#22c55e11',border:'1px solid #22c55e44',color:'#22c55e',padding:'5px 14px',borderRadius:7,cursor:'pointer',fontSize:12,fontFamily:"'Exo 2'"}}>+ Agregar</button></div>
+        <div className="panel" style={{padding:22}}><h3 style={{fontSize:14,fontWeight:700,marginBottom:14,color:'#a855f7'}}>📱 QR Tienda</h3><div style={{textAlign:'center'}}><img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://rocco-gaming.vercel.app&color=00e5ff&bgcolor=0d0d20" alt="QR" style={{borderRadius:10,border:'1px solid #1e1e40',width:150}}/><p style={{fontSize:11,color:'#475569',marginTop:10}}>Ponelo en tu bio de Instagram 🎯</p></div></div>
+      </div>
+      <div style={{marginTop:20}}><button onClick={save} className="btn-p" style={{padding:'12px 32px',borderRadius:8,fontSize:15}}>💾 Guardar Todo</button></div>
+    </div>
+  );
+}
+
+function AdminPage({tab,setTab,products,setProducts,orders,setOrders,expenses,setExpenses,clients,setClients,settings,setSettings,setView,notify}) {
+  const tabs=[{id:'dashboard',icon:'📊',label:'Dashboard'},{id:'products',icon:'📦',label:'Productos'},{id:'orders',icon:'🛒',label:'Pedidos'},{id:'expenses',icon:'💸',label:'Gastos'},{id:'crm',icon:'👥',label:'Clientes'},{id:'financial',icon:'📈',label:'Finanzas'},{id:'calculators',icon:'🧮',label:'Calculadoras'},{id:'settings',icon:'⚙️',label:'Ajustes'}];
+  return (
+    <div style={{display:'flex',minHeight:'100vh'}}>
+      <aside style={{width:200,background:'#0d0d20',borderRight:'1px solid #1e1e40',display:'flex',flexDirection:'column',position:'fixed',top:0,bottom:0,left:0,zIndex:50}}>
+        <div style={{padding:'16px 14px',borderBottom:'1px solid #1e1e40'}}><div style={{fontSize:24,marginBottom:3}}>🎮</div><h2 style={{fontFamily:'Orbitron,sans-serif',fontSize:11,fontWeight:900,background:'linear-gradient(135deg,#00e5ff,#a855f7)',WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent'}}>ROCCO GAMING</h2><p style={{fontSize:9,color:'#475569',letterSpacing:2,marginTop:2}}>ADMIN PANEL</p></div>
+        <nav style={{flex:1,padding:'8px 7px',overflowY:'auto'}}>{tabs.map(t=><button key={t.id} onClick={()=>setTab(t.id)} style={{width:'100%',display:'flex',alignItems:'center',gap:8,padding:'9px',borderRadius:7,border:'none',background:tab===t.id?'#00e5ff11':'transparent',color:tab===t.id?'#00e5ff':'#475569',cursor:'pointer',fontSize:12,fontWeight:tab===t.id?700:400,marginBottom:1,textAlign:'left',fontFamily:"'Exo 2',sans-serif",borderLeft:tab===t.id?'2px solid #00e5ff':'2px solid transparent',transition:'all .2s'}}><span style={{fontSize:15}}>{t.icon}</span>{t.label}</button>)}</nav>
+        <div style={{padding:'8px 7px',borderTop:'1px solid #1e1e40',display:'flex',flexDirection:'column',gap:4}}><button onClick={()=>setView('store')} style={{width:'100%',padding:7,borderRadius:7,border:'1px solid #1e1e40',background:'transparent',color:'#475569',cursor:'pointer',fontSize:11,fontFamily:"'Exo 2',sans-serif"}}>🌐 Ver Tienda</button><button onClick={()=>setView('login')} style={{width:'100%',padding:7,borderRadius:7,border:'none',background:'transparent',color:'#ef4444',cursor:'pointer',fontSize:11,fontFamily:"'Exo 2',sans-serif"}}>🚪 Salir</button></div>
+      </aside>
+      <main style={{marginLeft:200,flex:1,padding:'24px',minHeight:'100vh',overflowY:'auto'}}>
+        {tab==='dashboard'&&<DashTab products={products} orders={orders} expenses={expenses} clients={clients} settings={settings}/>}
+        {tab==='products'&&<ProdTab products={products} setProducts={setProducts} settings={settings} notify={notify}/>}
+        {tab==='orders'&&<OrderTab orders={orders} setOrders={setOrders} products={products} setProducts={setProducts} clients={clients} setClients={setClients} settings={settings} notify={notify}/>}
+        {tab==='expenses'&&<ExpTab expenses={expenses} setExpenses={setExpenses} notify={notify}/>}
+        {tab==='crm'&&<CRMTab clients={clients}/>}
+        {tab==='financial'&&<FinTab orders={orders} expenses={expenses} settings={settings}/>}
+        {tab==='calculators'&&<CalcTab settings={settings}/>}
+        {tab==='settings'&&<SetTab settings={settings} setSettings={setSettings} notify={notify}/>}
+      </main>
+    </div>
+  );
+}
+
+export default function App() {
+  const [view,setView]=useState('login');const [tab,setTab]=useState('dashboard');
+  const [products,setProducts]=useState(IP);const [orders,setOrders]=useState(IO);
+  const [expenses,setExpenses]=useState(IE);const [clients,setClients]=useState(IC);
+  const [settings,setSettings]=useState(IS);const [notif,setNotif]=useState(null);
+  const notify=(msg,type='success')=>{setNotif({msg,type});setTimeout(()=>setNotif(null),3000);};
+  return (
+    <div style={{minHeight:'100vh',background:'#060610',fontFamily:"'Exo 2',sans-serif",color:'#e2e8f0'}}>
+      <GS/>
+      {notif&&<Notif {...notif}/>}
+      {view==='login'&&<LoginPage setView={setView}/>}
+      {view==='store'&&<StorePage products={products} setProducts={setProducts} orders={orders} setOrders={setOrders} clients={clients} setClients={setClients} settings={settings} setView={setView} notify={notify}/>}
+      {view==='admin'&&<AdminPage tab={tab} setTab={setTab} products={products} setProducts={setProducts} orders={orders} setOrders={setOrders} expenses={expenses} setExpenses={setExpenses} clients={clients} setClients={setClients} settings={settings} setSettings={setSettings} setView={setView} notify={notify}/>}
+    </div>
+  );
+}
