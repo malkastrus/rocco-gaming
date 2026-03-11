@@ -17,9 +17,4 @@
     "development": ["last 1 chrome version"]
   }
 }
-```
 
-→ **Commit changes** y Vercel se redeploya solo ✅
-
-También revisá que tu repo tenga **exactamente estos archivos** y nada más:
-```
