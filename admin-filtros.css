@@ -1,0 +1,9 @@
+#tab-p select[multiple]{min-height:132px;padding:10px 12px;font-weight:600;color:#16324f;background:#fff;border:1px solid #b7d6ef}
+#tab-p select[multiple] option{padding:6px 4px}
+#tab-p .admin-filter-label,#tab-p .compact-form .lbl,#tab-s .settings-label{font-size:12px;font-weight:800;color:#16324f;letter-spacing:.04em;text-transform:uppercase}
+#tab-p .compact-form input,#tab-p .compact-form select,#tab-p .compact-form textarea{background:#fff;color:#16324f;font-weight:600;border:1px solid #bfd9ee}
+#tab-p .compact-form .upload-area{background:#f8fbff;border-color:#bfd9ee}
+#tab-p .compact-form .upload-area p{color:#5f7d99}
+@media (max-width: 980px){
+  #tab-p .compact-grid,#tab-s .settings-grid,#tab-s .settings-grid-wide{grid-template-columns:1fr !important}
+}
